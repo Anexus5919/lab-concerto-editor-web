@@ -14,7 +14,7 @@ import {
     MenuItem,
     InputLabel,
     FormControl
-} from '@material-ui/core';
+} from '@mui/material';
 
 import useStore from '../../store';
 import { IDeclaration, IModel } from '../../metamodel/concerto.metamodel';

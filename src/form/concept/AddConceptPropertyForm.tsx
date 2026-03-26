@@ -18,7 +18,7 @@ import {
     RadioGroup,
     Radio,
     FormControlLabel
-} from '@material-ui/core';
+} from '@mui/material';
 
 import useStore from '../../store';
 import { IConceptDeclaration, IDeclaration, IModel } from '../../metamodel/concerto.metamodel';

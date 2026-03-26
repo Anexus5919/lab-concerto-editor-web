@@ -11,7 +11,7 @@ import {
     TextField,
     Typography,
     Button
-} from '@material-ui/core';
+} from '@mui/material';
 
 import useStore from '../../store';
 import { IEnumDeclaration, IModel } from '../../metamodel/concerto.metamodel';

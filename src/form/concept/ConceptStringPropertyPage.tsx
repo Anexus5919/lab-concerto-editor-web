@@ -11,7 +11,7 @@ import {
     FormControlLabel,
     Checkbox,
     Button
-} from '@material-ui/core';
+} from '@mui/material';
 
 import useStore from '../../store';
 import { IConceptDeclaration, IModel, IStringProperty } from '../../metamodel/concerto.metamodel';

@@ -15,7 +15,7 @@ import {
     Button,
     MenuItem,
     MenuProps
-} from '@material-ui/core';
+} from '@mui/material';
 
 import useStore from '../../store';
 import { IConceptDeclaration, IIdentifiedBy, IModel } from '../../metamodel/concerto.metamodel';
