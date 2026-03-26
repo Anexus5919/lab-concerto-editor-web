@@ -10,19 +10,19 @@ import  FileWriter  from './fileWriter';
 import { CodeGen } from '@accordproject/concerto-tools';
 
 import {
-    Node,
-    Edge,
-    OnNodesChange,
-    OnEdgesChange,
-    OnConnect,
-    NodeChange,
-    EdgeChange,
-    Connection,
+    type Node,
+    type Edge,
+    type OnNodesChange,
+    type OnEdgesChange,
+    type OnConnect,
+    type NodeChange,
+    type EdgeChange,
+    type Connection,
     applyNodeChanges,
     applyEdgeChanges,
     addEdge,
-    XYPosition,
-} from 'react-flow-renderer';
+    type XYPosition,
+} from '@xyflow/react';
 
 import {
     IConceptDeclaration,
@@ -35,12 +35,11 @@ import { getLayoutedElements, metamodelToReactFlow } from './diagramUtil';
 import { getClassFromType, getErrorMessage } from './util';
 import JSZip from 'jszip';
 import { isEnum } from './modelUtil';
-import { stat } from 'fs';
 import { IConcept } from './metamodel/concerto';
 
 const SAMPLE_MODEL_1 = `namespace org.acme@1.0.0
 
-import {Project} from org.acme.project@2.0.0
+import org.acme.project@2.0.0.{Project}
 
 @diagram(180,29)
 abstract concept Person identified by email {
@@ -154,6 +153,10 @@ interface EditorState {
     selectPropertyNames: (conceptFqn: string, filterFunc?: (value: Property) => boolean) => string[]
     selectModelManager: () => ModelManager;
 
+    // diagram editing
+    addDeclarationToDiagram: (type: 'Concept' | 'Enum', position: XYPosition) => void
+    addPropertyToConcept: (namespace: string, conceptName: string) => void
+
     //codgen
     compileToTarget: (target: string) => void;
 }
@@ -263,15 +266,20 @@ const useEditorStore = create<EditorState>()((set, get) => ({
         }
     },
     ctoModified: (ctoText: string) => {
-        const model = Parser.parse(ctoText, undefined, { skipLocationNodes: true }) as IModel;
-        set(produce((state: EditorState) => {
-            state.models[model.namespace] = {
-                text: ctoText,
-                model: model,
-                visible: true
-            }
-        }))
-        get().modelsModified();
+        try {
+            const model = Parser.parse(ctoText, undefined, { skipLocationNodes: true }) as IModel;
+            set(produce((state: EditorState) => {
+                state.models[model.namespace] = {
+                    text: ctoText,
+                    model: model,
+                    visible: true
+                }
+            }))
+            get().modelsModified();
+        }
+        catch (err) {
+            get().errorChanged(getErrorMessage(err));
+        }
     },
     modelsModified: () => {
         try {
@@ -418,15 +426,26 @@ const useEditorStore = create<EditorState>()((set, get) => ({
     init: () => {
         const value = localStorage.getItem(STORAGE_KEY);
         if (value) {
-            set(produce((state: EditorState) => {
-                try {
-                    state.models = JSON.parse(value);
+            try {
+                const parsed = JSON.parse(value);
+                // Re-parse all cached CTO texts to rebuild fresh ASTs
+                const ctoTexts: string[] = [];
+                Object.values(parsed).forEach((entry: any) => {
+                    if (entry.text && typeof entry.text === 'string' && entry.text.trim().length > 0) {
+                        ctoTexts.push(entry.text);
+                    }
+                });
+                if (ctoTexts.length > 0) {
+                    get().ctoTextLoaded(ctoTexts);
+                } else {
+                    throw new Error('No valid CTO text in cache');
                 }
-                catch (err) {
-                    console.log(err);
-                }
-            }))
-            get().modelsModified();
+            }
+            catch (err) {
+                console.warn('Failed to load cached models, loading samples instead:', err);
+                localStorage.removeItem(STORAGE_KEY);
+                get().loadSampleRequested();
+            }
         }
         else {
             get().loadSampleRequested()
@@ -667,6 +686,45 @@ const useEditorStore = create<EditorState>()((set, get) => ({
         }))
 
         get().modelsModified();
+    },
+    addDeclarationToDiagram: (type: 'Concept' | 'Enum', position: XYPosition) => {
+        // Pick the first available namespace
+        const namespaces = Object.keys(get().models);
+        if (namespaces.length === 0) return;
+        const ns = namespaces[0];
+        const modelEntry = get().models[ns];
+        const baseName = type === 'Enum' ? 'NewEnum' : 'NewConcept';
+        const existingNames = new Set(modelEntry.model.declarations?.map(d => d.name) ?? []);
+        let name = baseName;
+        let counter = 1;
+        while (existingNames.has(name)) {
+            name = `${baseName}${counter++}`;
+        }
+
+        set(produce((state: EditorState) => {
+            const model = state.models[ns].model;
+            if (type === 'Enum') {
+                const newDecl = {
+                    $class: 'concerto.metamodel@1.0.0.EnumDeclaration',
+                    name,
+                    properties: [] as IEnumProperty[],
+                } as IEnumDeclaration;
+                model.declarations = [...(model.declarations ?? []), newDecl];
+            } else {
+                const newDecl = {
+                    $class: 'concerto.metamodel@1.0.0.ConceptDeclaration',
+                    name,
+                    isAbstract: false,
+                    properties: [] as IProperty[],
+                } as IConceptDeclaration;
+                model.declarations = [...(model.declarations ?? []), newDecl];
+            }
+            state.models[ns].text = Printer.toCTO(model);
+        }));
+        get().modelsModified();
+    },
+    addPropertyToConcept: (namespace: string, conceptName: string) => {
+        get().conceptPropertyAdded(namespace, conceptName);
     },
     compileToTarget: async (target: string) => {
 

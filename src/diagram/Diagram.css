@@ -2,44 +2,34 @@
   flex-direction: column;
   display: flex;
   width: 100%;
-  min-height: 500px;
-  height: 70vh;
+  height: calc(100vh - 120px);
   overflow: hidden;
-  padding: 20px;
+  position: relative;
+  background: #f0f2f8;
 }
 
-.diagram aside {
-  border-right: 1px solid #eee;
-  padding: 15px 10px;
-  font-size: 12px;
-  background: #fcfcfc;
+.react-flow__minimap {
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(5, 12, 64, 0.1) !important;
+  border: 1px solid rgba(5, 12, 64, 0.08) !important;
 }
 
-.diagram aside > * {
-  margin-bottom: 10px;
-  cursor: grab;
+.react-flow__controls {
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(5, 12, 64, 0.1) !important;
+  border: 1px solid rgba(5, 12, 64, 0.08) !important;
+  overflow: hidden;
 }
 
-.diagram aside .description {
-  margin-bottom: 10px;
+.react-flow__controls-button {
+  border-bottom: 1px solid rgba(5, 12, 64, 0.08) !important;
 }
 
-.diagram .reactflow-wrapper {
-  flex-grow: 1;
+.react-flow__controls-button:hover {
+  background: rgba(25, 198, 199, 0.1) !important;
 }
 
-.message {
-  font-size: 20px;
-  background: pink;
-}
-
-@media screen and (min-width: 768px) {
-  .diagram {
-    flex-direction: row;
-  }
-
-  .diagram aside {
-    width: 20%;
-    max-width: 180px;
-  }
+.react-flow__attribution {
+  font-size: 9px !important;
+  opacity: 0.4;
 }

@@ -1,3 +1,21 @@
+:root {
+  --ap-navy: #1B2540;
+  --ap-navy-deep: #050C40;
+  --ap-teal: #19C6C7;
+  --ap-teal-hover: #15b0b1;
+  --ap-teal-light: rgba(25, 198, 199, 0.1);
+  --ap-teal-border: rgba(25, 198, 199, 0.3);
+  --ap-text: #050C40;
+  --ap-text-muted: rgba(5, 12, 64, 0.6);
+  --ap-border: rgba(5, 12, 64, 0.12);
+  --ap-bg: #f8f9fc;
+  --ap-bg-card: #ffffff;
+  --ap-shadow-sm: 0 1px 3px rgba(5, 12, 64, 0.08);
+  --ap-shadow-md: 0 4px 12px rgba(5, 12, 64, 0.1);
+  --ap-radius: 10px;
+  --ap-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',

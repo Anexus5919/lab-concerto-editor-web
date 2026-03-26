@@ -1,53 +1,121 @@
 .Node {
-  border-width: 2px;
-  min-width: 250px;
-  border-color: black;
-  border-style: solid;
-  border-radius: 0px;
-  background-color: white;
-  padding: 0px;
+  border: 1.5px solid rgba(5, 12, 64, 0.15);
+  min-width: 240px;
+  max-width: 320px;
+  border-radius: 10px;
+  background-color: #ffffff;
+  padding: 0;
   width: fit-content;
+  box-shadow: 0 2px 8px rgba(5, 12, 64, 0.08);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  font-size: 0.8rem;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
 }
 
-.controls {
-  display: flex;
-  flex-wrap: nowrap;
-  justify-content: left;
+.Node:hover {
+  box-shadow: 0 4px 16px rgba(5, 12, 64, 0.14);
 }
 
 .Node > .header {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  justify-items: center;
-  padding-right: 10px;
-  padding-left: 10px;
-  padding-top: 10px;
-  padding-bottom: 10px;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 16px 8px;
+  border-bottom: 1px solid rgba(5, 12, 64, 0.08);
 }
 
 .properties {
-  padding-left: 10px;
-  padding-right: 10px;
+  padding: 6px 12px;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.properties td {
+  padding: 3px 6px;
+  font-size: 0.78rem;
+  color: #050C40;
+  vertical-align: middle;
+}
+
+.properties tr {
+  border-bottom: 1px solid rgba(5, 12, 64, 0.05);
+}
+
+.properties tr:last-child {
+  border-bottom: none;
+}
+
+.properties .type {
+  color: rgba(5, 12, 64, 0.5);
+  font-style: italic;
+  font-size: 0.73rem;
+}
+
+.properties .modifiers {
+  color: #19C6C7;
+  font-size: 0.7rem;
+  font-weight: 500;
 }
 
 .Node > .footer {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  justify-items: center;
-  padding-bottom: 2px;
+  padding: 0;
 }
 
 .DeclarationType {
-  color: black;
+  color: rgba(5, 12, 64, 0.5);
   font-style: italic;
-  font-size: small;
+  font-size: 0.7rem;
   text-align: right;
 }
 
 .DeclarationName {
-  color: black;
-  font-weight: bolder;
+  color: #050C40;
+  font-weight: 700;
   text-align: center;
+  font-size: 0.88rem;
+  letter-spacing: -0.01em;
+}
+
+.Node--abstract {
+  border-style: dashed;
+  border-color: rgba(5, 12, 64, 0.3);
+}
+
+.Stereotype {
+  color: rgba(5, 12, 64, 0.4);
+  font-size: 0.65rem;
+  font-style: italic;
+  text-align: center;
+  width: 100%;
+  text-transform: lowercase;
+  letter-spacing: 0.05em;
+}
+
+.add-property-btn {
+  width: 100%;
+  padding: 6px 12px;
+  border: none;
+  background: rgba(25, 198, 199, 0.06);
+  cursor: pointer;
+  font-size: 0.72rem;
+  color: #19C6C7;
+  font-weight: 500;
+  border-top: 1px solid rgba(5, 12, 64, 0.06);
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.add-property-btn:hover {
+  background: rgba(25, 198, 199, 0.15);
+  color: #15b0b1;
+}
+
+/* React Flow handle styling */
+.react-flow__handle {
+  width: 8px !important;
+  height: 8px !important;
+  background: var(--ap-teal, #19C6C7) !important;
+  border: 2px solid #fff !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15) !important;
 }

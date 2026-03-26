@@ -30,6 +30,14 @@ export type EnumNodeData = NodeData & {
   declaration: IEnumDeclaration
 }
 
+export type MapNodeData = NodeData & {
+  declaration: any
+}
+
+export type ScalarNodeData = NodeData & {
+  declaration: any
+}
+
 export type EdgeData = {
   label: string;
   owner: ITypeIdentifier;

@@ -1,11 +1,21 @@
 import { Handle, Position } from '@xyflow/react';
 import { colors, getStereotype } from '../theme';
-import { EnumNodeData } from '../types';
+import { MapNodeData } from '../types';
 
 import './Node.css';
-import { MAX_PROPERTIES } from '../diagramUtil';
 
-export default function EnumNode({ data }: { data: EnumNodeData }) {
+function getMapTypeName(mapType: any): string {
+    const cls = mapType?.$class ?? '';
+    if (cls.includes('ObjectMap')) {
+        return mapType.type?.name ?? 'Object';
+    }
+    // Extract primitive type: "StringMapKeyType" -> "String"
+    const lastDot = cls.lastIndexOf('.');
+    const name = cls.substring(lastDot + 1);
+    return name.replace('MapKeyType', '').replace('MapValueType', '');
+}
+
+export default function MapNode({ data }: { data: MapNodeData }) {
     const declaration = data.declaration;
     const stereotype = getStereotype(declaration.$class);
     return (
@@ -20,13 +30,14 @@ export default function EnumNode({ data }: { data: EnumNodeData }) {
                 <div>
                     <table className='properties'>
                         <tbody>
-                            {declaration.properties.slice(0,MAX_PROPERTIES).map(prop => (
-                                <tr key={prop.name}>
-                                    <td>{prop.name}</td>
-                                    <td></td>
-                                </tr>
-                            ))}
-                            {declaration.properties.length > MAX_PROPERTIES ? <tr><td>...</td></tr> : null }
+                            <tr>
+                                <td>Key</td>
+                                <td className='type'>{getMapTypeName(declaration.key)}</td>
+                            </tr>
+                            <tr>
+                                <td>Value</td>
+                                <td className='type'>{getMapTypeName(declaration.value)}</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>

@@ -41,7 +41,7 @@ function App() {
         </p>
         <p className="subtitle">
           v1.0.0
-        </p>      
+        </p>
         <div className="buttons">
           <button className="button mt-2" onClick={() => loadSampleRequested()}>Load Sample</button>
           <button className="button mt-2" onClick={() => setDisplayModal(true)}>Load from URL</button>
@@ -54,7 +54,7 @@ function App() {
                   <li className={view === 'Form' ? 'is-active' : undefined}><a onClick={() => viewChanged('Form')}>Form</a></li>
                   <li className={view === 'Diagram' ? 'is-active' : undefined}><a onClick={() => viewChanged('Diagram')}>Diagram</a></li>
                 </ul>
-          </div>  
+          </div>
         </div>
         <Notification />
         <LoadFromUrlForm active={displayModal} onClose={setDisplayModal}/>

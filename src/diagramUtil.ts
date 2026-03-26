@@ -1,9 +1,9 @@
-import { Node, Edge, Position, MarkerType } from 'react-flow-renderer';
+import { type Node, type Edge, Position, MarkerType } from '@xyflow/react';
 
 import dagre from 'dagre';
 import { IConceptDeclaration, IDecoratorNumber, IEnumDeclaration, IModel, IModels, IObjectProperty, IRelationshipProperty } from './metamodel/concerto.metamodel';
-import { EnumOrConcept, EdgeData, ConceptNodeData, EnumNodeData, Point } from './types';
-import { getLabel, isEnum, isObjectOrRelationshipProperty } from './modelUtil';
+import { EnumOrConcept, EdgeData, ConceptNodeData, EnumNodeData, MapNodeData, ScalarNodeData, Point } from './types';
+import { getLabel, isEnum, isMap, isScalar, isRelationship, isObjectOrRelationshipProperty } from './modelUtil';
 import { ModelEntry, Orientation } from './store';
 
 export const MAX_PROPERTIES = 10;
@@ -54,7 +54,7 @@ export function metamodelToReactFlow(models: IModels, records:Record<string,Mode
   let edges: Edge[] = [];
   models.models.forEach((model) => {
     if(records[model.namespace].visible) {
-      const modelDiagram = modelToReactFlow(model);
+      const modelDiagram = modelToReactFlow(model, models);
       nodes = nodes.concat(modelDiagram.nodes);
       edges = edges.concat(modelDiagram.edges);  
     }
@@ -62,33 +62,33 @@ export function metamodelToReactFlow(models: IModels, records:Record<string,Mode
   return { nodes, edges };
 }
 
-export function modelToReactFlow(model: IModel) {
+export function modelToReactFlow(model: IModel, models?: IModels) {
   const TILES = 4;
   const nodes: Node[] = [];
   const edges: Edge[] = [];
 
   model.declarations?.forEach((decl, index) => {
-    const data = isEnum(decl) ?
-      {
-        id: `${model.namespace}.${decl.name}`,
-        label: decl.name,
-        declaration: decl as IEnumDeclaration,
-        type: {
-          $class: 'concerto.metamodel@1.0.0.TypeIdentifier',
-          name: decl.name,
-          namespace: model.namespace,
-        }
-      } as EnumNodeData
-      : {
-        id: `${model.namespace}.${decl.name}`,
-        label: decl.name,
-        declaration: decl as IConceptDeclaration,
-        type: {
-          $class: 'concerto.metamodel@1.0.0.TypeIdentifier',
-          name: decl.name,
-          namespace: model.namespace,
-        },
-      } as ConceptNodeData;
+    let nodeType: string;
+    let data: any;
+    const typeId = {
+      $class: 'concerto.metamodel@1.0.0.TypeIdentifier',
+      name: decl.name,
+      namespace: model.namespace,
+    };
+
+    if (isEnum(decl)) {
+      nodeType = 'enum';
+      data = { id: `${model.namespace}.${decl.name}`, label: decl.name, declaration: decl as IEnumDeclaration, type: typeId } as EnumNodeData;
+    } else if (isMap(decl)) {
+      nodeType = 'map';
+      data = { id: `${model.namespace}.${decl.name}`, label: decl.name, declaration: decl, type: typeId } as MapNodeData;
+    } else if (isScalar(decl)) {
+      nodeType = 'scalar';
+      data = { id: `${model.namespace}.${decl.name}`, label: decl.name, declaration: decl, type: typeId } as ScalarNodeData;
+    } else {
+      nodeType = 'concept';
+      data = { id: `${model.namespace}.${decl.name}`, label: decl.name, declaration: decl as IConceptDeclaration, type: typeId } as ConceptNodeData;
+    }
 
     let x = (index % TILES) * 200;
     let y = Math.floor(index / TILES) * 400;
@@ -103,13 +103,16 @@ export function modelToReactFlow(model: IModel) {
 
     nodes.push({
       id: `${model.namespace}.${decl.name}`,
-      type: isEnum(decl) ? 'enum' : 'concept',
+      type: nodeType,
       data,
       position: { x, y },
     });
   })
 
   model.declarations?.forEach(decl => {
+    // Skip map and scalar declarations for property/supertype edges
+    if (isMap(decl) || isScalar(decl)) return;
+
     const enumOrConcept = decl as EnumOrConcept;
 
     // create edges for properties
@@ -117,10 +120,21 @@ export function modelToReactFlow(model: IModel) {
       .filter(property => isObjectOrRelationshipProperty(property))
       .forEach(property => {
         const notEnumProperty = property as IObjectProperty | IRelationshipProperty;
+        // Classify edge type
+        let edgeDataType: string = 'property';
+        if (isRelationship(property as any)) {
+          edgeDataType = 'relationship';
+        } else {
+          // Check if target is an enum
+          const allDecls = models ? models.models.flatMap(m => (m.declarations ?? []).map(d => ({ decl: d, ns: m.namespace }))) : [];
+          const targetDecl = allDecls.find(d => d.ns === notEnumProperty.type.namespace && d.decl.name === notEnumProperty.type.name);
+          if (targetDecl && isEnum(targetDecl.decl)) {
+            edgeDataType = 'enumRef';
+          }
+        }
         edges.push({
           id: `${model.namespace}.${enumOrConcept.name}#${notEnumProperty.name}`,
           type: 'floating',
-          markerStart: { type: MarkerType.Arrow, color: '#f00' },
           source: `${model.namespace}.${enumOrConcept.name}`,
           target: `${notEnumProperty.type.namespace}.${notEnumProperty.type.name}`,
           label: getLabel(notEnumProperty),
@@ -130,7 +144,7 @@ export function modelToReactFlow(model: IModel) {
               namespace: model.namespace,
             },
             propertyName: property.name,
-            type: 'property'
+            type: edgeDataType
           } as EdgeData,
         });
       });
@@ -141,12 +155,8 @@ export function modelToReactFlow(model: IModel) {
       edges.push({
         id: `${model.namespace}.${concept.name}`,
         type: 'floating',
-        markerStart: { type: MarkerType.Arrow, color: '#f00' },
         source: `${model.namespace}.${concept.name}`,
-        label: `is a ${concept.superType.name}`,
-        labelBgPadding: [8, 4],
-        labelBgBorderRadius: 4,
-        labelBgStyle: { fill: '#FFCC00', color: '#fff', fillOpacity: 0.7, fontSize: 'large' },
+        label: `extends ${concept.superType.name}`,
         target: `${concept.superType.namespace}.${concept.superType.name}`,
         data: {
           owner: {
@@ -167,13 +177,11 @@ export function modelToReactFlow(model: IModel) {
 
 // this helper function returns the intersection point
 // of the line between the center of the intersectionNode and the target node
-function getNodeIntersection(intersectionNode:Node, targetNode:Node) {
+function getNodeIntersection(intersectionNode:any, targetNode:any) {
   // https://math.stackexchange.com/questions/1724792/an-algorithm-for-finding-the-intersection-point-between-a-center-of-vision-and-a
-  const {
-    width: intersectionNodeWidth,
-    height: intersectionNodeHeight,
-    position: intersectionNodePosition,
-  } = intersectionNode;
+  const intersectionNodeWidth = intersectionNode.measured?.width ?? intersectionNode.width ?? 0;
+  const intersectionNodeHeight = intersectionNode.measured?.height ?? intersectionNode.height ?? 0;
+  const intersectionNodePosition = intersectionNode.position;
   const targetPosition = targetNode.position;
 
   const w = intersectionNodeWidth ? intersectionNodeWidth/ 2 : 0;
@@ -196,23 +204,24 @@ function getNodeIntersection(intersectionNode:Node, targetNode:Node) {
 }
 
 // returns the position (top,right,bottom or right) passed node compared to the intersection point
-function getEdgePosition(node:Node, intersectionPoint:Point) {
-  const n = { ...node.position, ...node };
-  const nx = Math.round(n.x);
-  const ny = Math.round(n.y);
+function getEdgePosition(node:any, intersectionPoint:Point) {
+  const nx = Math.round(node.position.x);
+  const ny = Math.round(node.position.y);
+  const nw = node.measured?.width ?? node.width ?? 0;
+  const nh = node.measured?.height ?? node.height ?? 0;
   const px = Math.round(intersectionPoint.x);
   const py = Math.round(intersectionPoint.y);
 
   if (px <= nx + 1) {
     return Position.Left;
   }
-  if (px >= nx + (n.width ? (n.width - 1) : 0)) {
+  if (px >= nx + (nw - 1)) {
     return Position.Right;
   }
   if (py <= ny + 1) {
     return Position.Top;
   }
-  if (py >= n.y + (n.height ? n.height - 1 : 0)) {
+  if (py >= ny + (nh - 1)) {
     return Position.Bottom;
   }
 
@@ -220,7 +229,7 @@ function getEdgePosition(node:Node, intersectionPoint:Point) {
 }
 
 // returns the parameters (sx, sy, tx, ty, sourcePos, targetPos) you need to create an edge
-export function getEdgeParams(source:Node, target:Node) {
+export function getEdgeParams(source:any, target:any) {
   const sourceIntersectionPoint = getNodeIntersection(source, target);
   const targetIntersectionPoint = getNodeIntersection(target, source);
 

@@ -74,6 +74,14 @@ export function isEnum(obj: IConcept) {
   return getClass(obj).endsWith('EnumDeclaration');
 }
 
+export function isMap(obj: IConcept) {
+  return getClass(obj).endsWith('MapDeclaration');
+}
+
+export function isScalar(obj: IConcept) {
+  return getClass(obj).endsWith('Scalar');
+}
+
 export function isString(property: IProperty) {
   return getClass(property) === 'concerto.metamodel@1.0.0.StringProperty' &&
     !property.isArray

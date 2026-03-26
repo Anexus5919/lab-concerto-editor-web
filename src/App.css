@@ -29,17 +29,17 @@
   row-gap: 2rem;
 }
 
-.left-column, .right-column{ 
+.left-column, .right-column{
    display: flex;
    flex-direction: row;
 }
 
 .left-column{
-	width: 40%;
+  width: 40%;
   height: 80vh;
 }
 .right-column{
-	width: 60%;
+  width: 60%;
   height: 80vh;
 }
 

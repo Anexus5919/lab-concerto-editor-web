@@ -1,10 +1,9 @@
 import * as React from 'react';
-import { styled, alpha } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
 import Button from '@mui/material/Button';
 import Menu, { MenuProps } from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import useStore from './store';
-import Divider from '@mui/material/Divider';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 const targets = [ 'Go', 'PlantUML', 'Typescript', 'Java', 'JSONSchema', 'XMLSchema', 'GraphQL', 'CSharp', 'OData']
@@ -69,17 +68,11 @@ export default function CodegenMenu() {
         open={open}
         onClose={handleClose}
       >
-        <>
-        {
-          targets.map((el)=>{
-            return (
-              <MenuItem onClick={handleClose} disableRipple>
-                {el}
-              </MenuItem>
-            )
-          })
-        }
-        </>
+        {targets.map((el) => (
+          <MenuItem key={el} onClick={handleClose} disableRipple>
+            {el}
+          </MenuItem>
+        ))}
       </StyledMenu>
     </div>
   );

@@ -1,11 +1,15 @@
 .floatingedges {
-    flex-direction: column;
-    display: flex;
-    flex-grow: 1;
-    height: 100%;
-  }
-  
-  .floatingedges .react-flow__handle {
-    opacity: 0;
-  }
-  
+  flex-direction: column;
+  display: flex;
+  flex-grow: 1;
+  height: 100%;
+}
+
+.floatingedges .react-flow__handle {
+  opacity: 0;
+}
+
+.react-flow__edge-path {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
